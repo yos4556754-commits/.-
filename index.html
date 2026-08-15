@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كنيسة الأنبا أثناسيوس</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:linear-gradient(135deg,#173b67,#2d6ca8);color:white;padding:28px 20px;border-radius:0 0 28px 28px}
+header h1{margin:0 0 6px;font-size:30px} header p{margin:0;opacity:.9}
+.container{max-width:850px;margin:auto;padding:18px}
+.card{background:white;border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 5px 20px #00000012}
+h2{margin-top:0;color:#173b67}
+input,button{width:100%;padding:13px;border-radius:12px;font-size:16px}
+input{border:1px solid #ccd5e2;margin:7px 0 12px}
+button{border:0;background:#1f5f99;color:white;font-weight:bold;cursor:pointer;margin-top:8px}
+button.secondary{background:#e9eef5;color:#173b67}
+.hidden{display:none}
+.badge{display:inline-block;background:#eaf3ff;color:#1f5f99;padding:6px 10px;border-radius:20px;font-size:13px}
+.meeting{border-right:5px solid #2d6ca8;background:#f8fbff;padding:14px;border-radius:14px;margin:10px 0}
+.meeting strong{display:block;font-size:18px;margin-bottom:5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.quick{padding:15px;border-radius:16px;background:#eef5fc;color:#173b67;text-align:center;font-weight:bold}
+#map{height:280px;border-radius:18px;background:#e7edf5;display:flex;align-items:center;justify-content:center;text-align:center;color:#52647a}
+#preview{max-width:100%;max-height:220px;border-radius:14px;margin-top:10px}
+.small{font-size:13px;color:#667085;line-height:1.7}
+footer{text-align:center;color:#667085;padding:25px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>⛪ كنيسة الأنبا أثناسيوس</h1>
+    <p>السيوف شماعة</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section id="login" class="card">
+  <h2>تسجيل الدخول</h2>
+  <p>اكتب اسمك وسنك عشان نعرض لك الاجتماعات المناسبة لسنك.</p>
+  <label>الاسم</label>
+  <input id="name" placeholder="اكتب اسمك">
+  <label>السن</label>
+  <input id="age" type="number" min="1" max="100" placeholder="اكتب سنك">
+
+  <label>صورة البطاقة / المستند</label>
+  <input id="idPhoto" type="file" accept="image/*" capture="environment">
+  <p class="small">الصورة هنا للمعاينة فقط ولا يتم رفعها أو حفظها على الموقع في هذا الإصدار.</p>
+  <img id="preview" class="hidden">
+
+  <button onclick="login()">دخول</button>
+</section>
+
+<section id="app" class="hidden">
+  <div class="card">
+    <h2>أهلاً يا <span id="userName"></span> 👋</h2>
+    <span class="badge">السن: <span id="userAge"></span></span>
+  </div>
+
+  <div class="grid">
+    <div class="quick" onclick="show('myMeetings')">📅 اجتماعاتي</div>
+    <div class="quick" onclick="show('allMeetings')">📋 كل الاجتماعات</div>
+    <div class="quick" onclick="show('church')">📍 كنيستنا</div>
+    <div class="quick" onclick="show('masses')">⛪ القداسات</div>
+  </div>
+
+  <section id="myMeetings" class="card">
+    <h2>اجتماعاتك</h2>
+    <div id="recommended"></div>
+  </section>
+
+  <section id="allMeetings" class="card hidden">
+    <h2>كل الاجتماعات</h2>
+    <div id="allList"></div>
+  </section>
+
+  <section id="church" class="card hidden">
+    <h2>📍 كنيستنا</h2>
+    <p><b>كنيسة الأنبا أثناسيوس — السيوف شماعة</b></p>
+    <div id="map">اضغط الزر لتحديد موقعك وفتح الاتجاهات إلى الكنيسة.<br>
+      <span class="small">ملاحظة: ضع إحداثيات الكنيسة الحقيقية في المتغير CHURCH_LAT و CHURCH_LNG داخل الكود.</span>
+    </div>
+    <button onclick="openDirections()">🧭 افتح الاتجاهات</button>
+    <button class="secondary" onclick="getLocation()">📍 اعرف موقعي الحالي</button>
+  </section>
+
+  <section id="masses" class="card hidden">
+    <h2>⛪ القداسات</h2>
+    <div id="massList"></div>
+  </section>
+
+  <div class="card">
+    <h2>🔔 تنبيه</h2>
+    <p class="small">يمكن لاحقًا إضافة إشعارات قبل الاجتماع، أخبار الكنيسة، الصور، والخدمات المختلفة.</p>
+  </div>
+
+  <button class="secondary" onclick="logout()">تسجيل خروج</button>
+</section>
+
+</main>
+
+<footer>كنيسة الأنبا أثناسيوس © 2026</footer>
+
+<script>
+// ضع إحداثيات الكنيسة الحقيقية هنا بعد الحصول عليها من Google Maps
+const CHURCH_LAT = 31.237734;
+const CHURCH_LNG = 29.989355;
+
+const meetings = [
+  {name:"الخريجين", day:"الجمعة", time:"7:00 م", min:22, max:100},
+  {name:"شباب كلية", day:"الخميس", time:"7:00 م", min:18, max:21},
+  {name:"حضانة", day:"الجمعة", time:"1:00 م", min:3, max:6},
+  {name:"ابتدائي 1، 2، 3", day:"الجمعة", time:"9:30 ص", min:6, max:9},
+  {name:"ابتدائي 4، 5، 6", day:"الجمعة", time:"10:30 ص", min:9, max:12},
+  {name:"ثانوي", day:"الجمعة", time:"2:00 م", min:15, max:18},
+  {name:"الرجال", day:"الاثنين", time:"7:00 م", min:25, max:100},
+  {name:"خدمة إعدادي", day:"الجمعة", time:"4:00 م", min:12, max:15}
+];
+
+const masses = [
+  {day:"يوميًا", time:"8:00 ص"},
+  {day:"الأربعاء", time:"7:30 ص"},
+  {day:"الأربعاء", time:"12:00 م"},
+  {day:"الجمعة", time:"من 6:00 ص إلى 8:00 ص"},
+  {day:"الأحد", time:"مثل الجمعة"}
+];
+
+function login(){
+  const name=document.getElementById("name").value.trim();
+  const age=Number(document.getElementById("age").value);
+  if(!name || !age){alert("اكتب الاسم والسن أولاً");return}
+  localStorage.setItem("churchUser",JSON.stringify({name,age}));
+  loadApp();
+}
+
+function loadApp(){
+  const data=JSON.parse(localStorage.getItem("churchUser"));
+  if(!data)return;
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userName").textContent=data.name;
+  document.getElementById("userAge").textContent=data.age;
+  renderMeetings(data.age);
+  renderAll();
+  renderMasses();
+}
+
+function renderMeetings(age){
+  const box=document.getElementById("recommended");
+  const list=meetings.filter(m=>age>=m.min && age<m.max);
+  box.innerHTML=list.length ? list.map(card).join("") :
+    "<p>مفيش اجتماع محدد للسن ده حاليًا. شوف كل الاجتماعات للتأكد.</p>";
+}
+function card(m){
+  return `<div class="meeting"><strong>⛪ ${m.name}</strong>📅 ${m.day}<br>🕐 ${m.time}</div>`;
+}
+function renderAll(){
+  document.getElementById("allList").innerHTML=meetings.map(card).join("");
+}
+function renderMasses(){
+  document.getElementById("massList").innerHTML=masses.map(m=>
+    `<div class="meeting"><strong>⛪ قداس</strong>📅 ${m.day}<br>🕐 ${m.time}</div>`
+  ).join("");
+}
+function show(id){
+  ["myMeetings","allMeetings","church","masses"].forEach(x=>{
+    document.getElementById(x).classList.toggle("hidden",x!==id);
+  });
+  document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+function openDirections(){
+  const url=`https://www.google.com/maps/dir/?api=1&destination=${CHURCH_LAT},${CHURCH_LNG}`;
+  window.open(url,"_blank");
+}
+function getLocation(){
+  if(!navigator.geolocation){alert("المتصفح لا يدعم تحديد الموقع");return}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    document.getElementById("map").innerHTML=
+      `📍 موقعك الحالي<br>${lat.toFixed(5)}, ${lng.toFixed(5)}<br><br>
+       يمكنك الآن الضغط على "افتح الاتجاهات".`;
+  },()=>alert("لم يتم السماح بالوصول للموقع."));
+}
+function logout(){
+  localStorage.removeItem("churchUser");
+  location.reload();
+}
+
+document.getElementById("idPhoto").addEventListener("change",function(){
+  const file=this.files[0];
+  if(!file)return;
+  const img=document.getElementById("preview");
+  img.src=URL.createObjectURL(file);
+  img.classList.remove("hidden");
+});
+
+loadApp();
+</script>
+</body>
+</html>
